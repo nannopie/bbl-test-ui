@@ -4,31 +4,22 @@ import { AppBar, Avatar, Box, Button, Container, IconButton, Menu, MenuItem, Too
 import MenuIcon from '@mui/icons-material/Menu';
 import AdbIcon from '@mui/icons-material/Adb';
 import Link from 'next/link'
+import { useEffect, useState } from 'react';
 
-const settings = ['Profile', 'Account', 'Logout'];
 const pages = [{ pageName: 'User', path: '/users', mode: 'user' }, { pageName: 'Post', path: '/posts', mode: 'post' }];
 
 export function Header(props: any) {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
-  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
-
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
-  };
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
   };
 
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
   };
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
-
   return (
-    <AppBar position="static">
+    <AppBar position="sticky" sx={{top:0}}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -119,37 +110,91 @@ export function Header(props: any) {
             ))}
           </Box>
 
-          <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
+          <ShowProfile></ShowProfile>
         </Toolbar>
       </Container>
     </AppBar>
   );
+}
+
+const ShowProfile = () => {
+  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const [username, setUsername] = useState<null | string>();
+  const [loged, setLoged] = useState<null | string>();
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      const findLog = localStorage.getItem('bblTestLogin');
+      setLoged(findLog);
+      if (findLog) {
+        const findUsername = localStorage.getItem('bblTestLoginUsername');
+        setUsername(findUsername);
+      }
+    }
+
+    checkLogin();
+  });
+
+  function logOut() {
+    localStorage.removeItem("bblTestLogin");
+    localStorage.removeItem("bblTestLoginUsername");
+    handleCloseUserMenu();
+  }
+
+  if (loged) {
+    return (
+      <>
+        <Box sx={{ flexGrow: 0 }}>
+          <Typography textAlign="center">Hello {username} &nbsp;</Typography>
+        </Box>
+
+        <Box sx={{ flexGrow: 0 }}>
+          <Tooltip title="Open settings">
+            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+              <Avatar alt={username ? username : ""} />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            sx={{ mt: '45px' }}
+            id="menu-appbar"
+            anchorEl={anchorElUser}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            open={Boolean(anchorElUser)}
+            onClose={handleCloseUserMenu}
+          >
+            <MenuItem>
+              <Typography textAlign="center">Profile</Typography>
+            </MenuItem>
+            <MenuItem>
+              <Typography textAlign="center">Accout</Typography>
+            </MenuItem>
+            <MenuItem onClick={logOut}>
+              <Typography textAlign="center">Logout</Typography>
+            </MenuItem>
+          </Menu>
+        </Box>
+      </>
+    )
+  } else {
+    return (
+      <Box sx={{ flexGrow: 0 }}>
+        <Button color="inherit" variant="outlined" sx={{ fontWeight: "bold" }} href='/login'>Login</Button>
+      </Box>
+    )
+  }
 }

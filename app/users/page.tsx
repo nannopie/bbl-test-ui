@@ -14,8 +14,8 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 
 const UserPage = () => {
-  const [search, setSearch] = useState<string>();
-  const [userList, setUserList] = useState<User[]>();
+  const [search, setSearch] = useState<string>('');
+  const [userList, setUserList] = useState<User[]>([]);
 
   useEffect(() => {
     const url = "http://localhost:5000/users/findAllUser";
@@ -50,29 +50,6 @@ const UserPage = () => {
     }
   }
 
-  async function addNewUser() {
-    let url;
-    if (search && search.length > 0) {
-      url = "http://localhost:5000/users/findUserByName/" + search;
-    } else {
-      url = "http://localhost:5000/users/findAllUser";
-    }
-
-    try {
-      const response = await fetch(url);
-      const json = await response.json();
-      setUserList(json.user);
-    } catch (error) {
-      console.log("error", error);
-    }
-  }
-
-  const callFromCFindUser = () => {
-    console.log("callFromCFindUser");
-
-  }
-
-  if (!userList) return <div> <Header mode="user"></Header>  <Test setSearch={setSearch} search={search}>  </Test> {search}</div>;
   return (
     <>
       <Header mode="user"></Header>
@@ -89,7 +66,7 @@ const UserPage = () => {
               </Button>
             </Grid>
             <Grid item md={2} xs={12}>
-              <Button variant="contained" endIcon={<PersonAddAlt1Icon />} color="success" onClick={addNewUser}>
+              <Button variant="contained" endIcon={<PersonAddAlt1Icon />} color="success" href="/users/add-new-user">
                 Add New User
               </Button>
             </Grid>
@@ -99,8 +76,8 @@ const UserPage = () => {
 
       <Box sx={{ display: 'grid', m: 2 }}>
         <Container maxWidth="xl">
-          <TableContainer component={Paper}>
-            <Table aria-label="collapsible table">
+          <TableContainer component={Paper} sx={{ maxHeight: 450 }}>
+            <Table stickyHeader aria-label="collapsible table">
               <TableHead>
                 <TableRow>
                   <TableCell />
@@ -114,8 +91,8 @@ const UserPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {userList.map((row) => (
-                  <Row key={row.name} row={row} />
+                {userList?.map((row) => (
+                  <Row key={row.name} row={row} findUser={findUser} />
                 ))}
               </TableBody>
             </Table>
@@ -126,15 +103,14 @@ const UserPage = () => {
   )
 }
 
-const TableUserList = (props: Props) =>{
-  return(
-    
-  )
+interface Props {
+  row: User
+  findUser: Function
 }
 
-function Row(props: { row: User }) {
+function Row(props: Props) {
   const { row } = props;
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   async function deleteUser(user: User) {
     if (confirm("confirm delete user : " + user.name + " ?")) {
       const url = "http://localhost:5000/users/deleteUserById/" + user.id;
@@ -142,8 +118,8 @@ function Row(props: { row: User }) {
         const response = await fetch(url, { method: 'DELETE' });
         if (response.ok) {
           console.log("is ok delete");
-          alert("Delete success!")
-          window.location.reload();
+          alert("Delete success!");
+          props.findUser();
         }
       } catch (error) {
         console.log("error", error);
@@ -241,19 +217,4 @@ function Row(props: { row: User }) {
   );
 }
 
-interface Props {
-  search: string
-  setSearch: Dispatch<SetStateAction<string>>
-}
-
-const Test = (props: Props) => {
-  return (
-    <>
-      <Container maxWidth="xl">
-
-        <Button variant="contained" endIcon={<SearchIcon />} onClick={() => props.setSearch('hello moon')}>Test</Button>
-      </Container>
-    </>
-  )
-}
 export default UserPage
